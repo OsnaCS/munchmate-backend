@@ -1,20 +1,26 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"github.com/go-martini/martini"
+	// "munchmate-backend/store"
 	"os"
 )
 
 func main() {
-	http.HandleFunc("/", hello)
-	fmt.Println("listening...")
-	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	if err != nil {
-		panic(err)
-	}
-}
+	// var database store.Database
 
-func hello(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(res, "hello, world")
+	// if err != nil {
+	// 	return
+	// }
+
+	m := martini.Classic()
+
+	// m.Group("/munch", func(r martini.Router) {
+	// 	// r.Get("/:id")
+	// })
+
+	m.Get("/", func() string {
+		return "shit: " + os.Getenv("DATABASE_URL")
+	})
+	m.Run()
 }
