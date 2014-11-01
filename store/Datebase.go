@@ -6,15 +6,15 @@ import (
 	"os"
 )
 
-type Database struct {
-	dbCon *sql.DB
+type MyDB struct {
+	Con *sql.DB
 }
 
-func (db *Database) Init() error {
+func (db *MyDB) Init() error {
 	// connect to the postgres database with the database URL retrieved via
 	// environment variable
 	var conErr error
-	db.dbCon, conErr = sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	db.Con, conErr = sql.Open("postgres", os.Getenv("DATABASE_URL"))
 
 	// check if an error occurred while connecting
 	if conErr != nil {
@@ -22,7 +22,7 @@ func (db *Database) Init() error {
 	}
 
 	// make sure that we have tried to connect and check for further errors
-	pingErr := db.dbCon.Ping()
+	pingErr := db.Con.Ping()
 	if pingErr != nil {
 		return pingErr
 	}
