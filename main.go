@@ -36,11 +36,37 @@ func GetUser(db *store.MyDB, params martini.Params) (int, string) {
 
 	// if any error occured while querying...
 	if err != nil {
-		return 500, "Query failed:" + err.Error()
+		return 500, "Query failed: " + err.Error()
 	}
 
 	// serialize the user data as json and send out
 	out, _ := json.Marshal(us)
+	return 200, string(out)
+}
+
+func GetNearCanteens(db *store.MyDB, params martini.Params) (int, string) {
+	rows, queryErr := db.Con.Query(`SELECT canteens.id, city_id, 
+						              canteens.name, cities.name, location
+  						       FROM canteens
+ 						       INNER JOIN cities ON cities.id=city_id`)
+	if queryErr != nil {
+		return 500, "Query failed: " + queryErr.Error()
+	}
+	defer rows.Close()
+
+	var canteens []store.Canteen
+
+	for rows.Next() {
+		var c store.Canteen
+		rowErr := rows.Scan(&c.ID, &c.CityID, &c.Name, &c.CityName, &c.GeoLocation)
+		if rowErr != nil {
+			return 500, "Query failed: " + rowErr.Error()
+		}
+		canteens = append(canteens, c)
+	}
+
+	// serialize the user data as json and send out
+	out, _ := json.Marshal(canteens)
 	return 200, string(out)
 }
 
@@ -57,6 +83,10 @@ func main() {
 	// set routes for user action
 	m.Group("/user", func(r martini.Router) {
 		r.Get("/:id", GetUser)
+	})
+
+	m.Group("/canteen", func(r martini.Router) {
+		r.Get("/nearest", GetNearCanteens)
 	})
 
 	// set root route (print some message)
