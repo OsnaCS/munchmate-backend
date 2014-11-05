@@ -48,4 +48,5 @@ type Canteen struct {
 	Name        string
 	CityName    string
 	GeoLocation Location
+	Distance    float64
 }

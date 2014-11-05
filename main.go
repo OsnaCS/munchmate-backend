@@ -44,21 +44,37 @@ func GetUser(db *store.MyDB, params martini.Params) (int, string) {
 	return 200, string(out)
 }
 
-func GetNearCanteens(db *store.MyDB, params martini.Params) (int, string) {
-	rows, queryErr := db.Con.Query(`SELECT canteens.id, city_id, 
-						              canteens.name, cities.name, location
-  						       FROM canteens
- 						       INNER JOIN cities ON cities.id=city_id`)
+func GetNearCanteens(db *store.MyDB, req *http.Request) (int, string) {
+	// obtain http-get parameters
+	// TODO: Maybe check for sanity
+	v := req.URL.Query()
+
+	// execute query
+	// TODO: "External" Limit?
+	rows, queryErr := db.Con.Query(
+		`SELECT canteens.id, city_id, 
+				canteens.name, cities.name, location,
+				(point($1, $2) <@> location)*1.609344 
+					as distance
+		 FROM canteens
+		 INNER JOIN cities ON cities.id=city_id
+		 ORDER BY distance
+		 LIMIT 5`, v.Get("lat"), v.Get("lng"))
+
+	// check if any error occured while executing the query
 	if queryErr != nil {
 		return 500, "Query failed: " + queryErr.Error()
 	}
 	defer rows.Close()
 
+	// prepare list of canteens
 	var canteens []store.Canteen
 
+	// go through all results and add those to the list
 	for rows.Next() {
 		var c store.Canteen
-		rowErr := rows.Scan(&c.ID, &c.CityID, &c.Name, &c.CityName, &c.GeoLocation)
+		rowErr := rows.Scan(&c.ID, &c.CityID, &c.Name, &c.CityName,
+			&c.GeoLocation, &c.Distance)
 		if rowErr != nil {
 			return 500, "Query failed: " + rowErr.Error()
 		}
