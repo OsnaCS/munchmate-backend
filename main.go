@@ -1,115 +1,83 @@
 package main
 
 import (
-	"encoding/json"
-	"github.com/go-martini/martini"
-	"munchmate-backend/store"
+	"fmt"
+	"github.com/julienschmidt/httprouter"
+	"munchmate-backend/common"
+	"munchmate-backend/v1"
 	"net/http"
-	"strconv"
+	"os"
 )
 
-// Initializes the database connection (used as a middleware handler)
-func InitDB(res http.ResponseWriter, req *http.Request, db *store.MyDB) {
-	// the database tries to connect and ping itself
-	err := db.Init()
-
-	// If any error occured -> output error via HTTP status code and text.
-	// The output will prevent any other handlers from starting
-	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte("Database connection failed"))
-	}
+type extResponseWriter struct {
+	status int
+	http.ResponseWriter
 }
 
-func GetUser(db *store.MyDB, params martini.Params) (int, string) {
-	// try to convert the given id to an int64
-	id, convErr := strconv.ParseInt(params["id"], 10, 64)
-	if convErr != nil {
-		return 400, "Invalid ID"
-	}
-
-	// query the database for the requested user and save result
-	us := store.User{ID: id}
-	row := db.Con.QueryRow(`SELECT username, has_avatar FROM users 
-                            WHERE user_id = $1`, id)
-	err := row.Scan(&us.Name, &us.HasAvatar)
-
-	// if any error occured while querying...
-	if err != nil {
-		return 500, "Query failed: " + err.Error()
-	}
-
-	// serialize the user data as json and send out
-	out, _ := json.Marshal(us)
-	return 200, string(out)
+func (w *extResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
 }
 
-func GetNearCanteens(db *store.MyDB, req *http.Request) (int, string) {
-	// obtain http-get parameters
-	// TODO: Maybe check for sanity
-	v := req.URL.Query()
-
-	// execute query
-	// TODO: "External" Limit?
-	rows, queryErr := db.Con.Query(
-		`SELECT canteens.id, city_id, 
-				canteens.name, cities.name, location,
-				(point($1, $2) <@> location)*1.609344 
-					as distance
-		 FROM canteens
-		 INNER JOIN cities ON cities.id=city_id
-		 ORDER BY distance
-		 LIMIT 5`, v.Get("lat"), v.Get("lng"))
-
-	// check if any error occured while executing the query
-	if queryErr != nil {
-		return 500, "Query failed: " + queryErr.Error()
-	}
-	defer rows.Close()
-
-	// prepare list of canteens
-	var canteens []store.Canteen
-
-	// go through all results and add those to the list
-	for rows.Next() {
-		var c store.Canteen
-		rowErr := rows.Scan(&c.ID, &c.CityID, &c.Name, &c.CityName,
-			&c.GeoLocation, &c.Distance)
-		if rowErr != nil {
-			return 500, "Query failed: " + rowErr.Error()
-		}
-		canteens = append(canteens, c)
+func MainHandler(w http.ResponseWriter, r *http.Request, router *httprouter.Router) {
+	// Check if database connection is still alive
+	dbErr := common.CheckDB()
+	if dbErr != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write(common.OutError("Database connection failed!", dbErr))
+		return
 	}
 
-	// serialize the user data as json and send out
-	out, _ := json.Marshal(canteens)
-	return 200, string(out)
+	// lookup handler for URL
+	handler, param, _ := router.Lookup(r.Method, r.URL.Path)
+	if handler == nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(common.OutError("Invalid URL!", nil))
+		return
+	}
+
+	// call the handler
+	handler(w, r, param)
+
+}
+
+func Root(w http.ResponseWriter, r *http.Request, par httprouter.Params) {
+	w.Write([]byte("Munchmate API"))
 }
 
 func main() {
-	// create a classic instance of martini
-	m := martini.Classic()
+	fmt.Println(">>>>> Listening on port " + os.Getenv("PORT") + " <<<<<")
 
-	// Make the database service available to all handlers and add middleware
-	// handler "InitDB" to initialize the DB connection.
-	var database store.MyDB
-	m.Map(&database)
-	m.Use(InitDB)
+	// Connect to database
+	dbErr := common.ConnectDB()
+	if dbErr != nil {
+		fmt.Println("Critical Error: Database connection failed!")
+		fmt.Println(dbErr.Error())
+	}
 
-	// set routes for user action
-	m.Group("/user", func(r martini.Router) {
-		r.Get("/:id", GetUser)
+	// Create a new smart router
+	router := &httprouter.Router{
+		RedirectTrailingSlash: false,
+		RedirectFixedPath:     false,
+	}
+
+	// setup routes (let each version set routes itself)
+	router.GET("/", Root)
+	v1.PrepareRoutes(router)
+
+	// handle all requests with this lambda
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// create extended response writer to save status code
+		rw := extResponseWriter{200, w}
+
+		// call the main handler which does the router dispatch
+		MainHandler(&rw, r, router)
+
+		// print a log message
+		fmt.Println(r.Method, r.URL.Path, " -> [",
+			rw.status, http.StatusText(rw.status), "]")
 	})
 
-	m.Group("/canteen", func(r martini.Router) {
-		r.Get("/nearest", GetNearCanteens)
-	})
-
-	// set root route (print some message)
-	m.Get("/", func(db *store.MyDB) string {
-		return "Munchmate Backend :-)"
-	})
-
-	// run the martini server
-	m.Run()
+	// actually start the server on the port given by $PORT
+	http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }

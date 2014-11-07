@@ -1,4 +1,4 @@
-package store
+package common
 
 import (
 	"fmt"
@@ -40,13 +40,4 @@ func (l *Location) Scan(val interface{}) error {
 	}
 
 	return nil
-}
-
-type Canteen struct {
-	ID          int32
-	CityID      int32
-	Name        string
-	CityName    string
-	GeoLocation Location
-	Distance    float64
 }

@@ -1,4 +1,0 @@
-#!/bin/sh
-
-killall munchmate-backend
-go build && (PORT=1338 ./munchmate-backend &)	
