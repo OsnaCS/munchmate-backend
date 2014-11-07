@@ -13,6 +13,10 @@
 			"Rev": "819aca59fdc412028cc5348ff3d16be2715d33cf"
 		},
 		{
+			"ImportPath": "github.com/julienschmidt/httprouter",
+			"Rev": "46807412fe50aaceb73bb57061c2230fd26a1640"
+		},
+		{
 			"ImportPath": "github.com/lib/pq",
 			"Rev": "b021d0ef20de4f7ed239e2cbe3b95648d8e41e95"
 		}
