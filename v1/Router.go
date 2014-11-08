@@ -7,4 +7,5 @@ import (
 func PrepareRoutes(r *httprouter.Router) {
 	// routes for /canteen
 	r.GET("/v1/canteen/nearest", GetNearCanteens)
+	r.GET("/v1/canteen/id/:id", GetCanteenByID)
 }
