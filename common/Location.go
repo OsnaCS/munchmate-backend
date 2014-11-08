@@ -1,19 +1,13 @@
 package common
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
 
 type Location struct {
-	Lat float64
-	Lng float64
-}
-
-func (l *Location) MarshalJSON() ([]byte, error) {
-	res := fmt.Sprintf(`{"lat":%v, "lng":%v}`, l.Lat, l.Lng)
-	return []byte(res), nil
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
 }
 
 func (l *Location) Scan(val interface{}) error {

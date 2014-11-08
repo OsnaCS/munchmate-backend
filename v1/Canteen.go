@@ -9,12 +9,12 @@ import (
 )
 
 type Canteen struct {
-	ID          int32
-	CityID      int32
-	Name        string
-	CityName    string
-	GeoLocation common.Location
-	Distance    float64
+	ID          int32           `json:"id"`
+	CityID      int32           `json:"cityID"`
+	Name        string          `json:"name"`
+	CityName    string          `json:"cityName"`
+	GeoLocation common.Location `json:"geoLocation"`
+	Distance    float64         `json:"distance"`
 }
 
 func GetCanteenByID(w http.ResponseWriter, r *http.Request, par httprouter.Params) {
