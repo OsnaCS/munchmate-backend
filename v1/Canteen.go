@@ -4,6 +4,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"munchmate-backend/common"
 	"net/http"
+	"strconv"
 )
 
 type Canteen struct {
@@ -17,8 +18,25 @@ type Canteen struct {
 
 func GetNearCanteens(w http.ResponseWriter, r *http.Request, par httprouter.Params) {
 	// obtain http-get parameters
-	// TODO: Maybe check for sanity
 	v := r.URL.Query()
+	lat := v.Get("lat")
+	lng := v.Get("lng")
+
+	// try to parse parameters as floating point
+	_, latErr := strconv.ParseFloat(lat, 32)
+	_, lngErr := strconv.ParseFloat(lng, 32)
+
+	// if parsing is not possible -> error
+	if latErr != nil || lngErr != nil {
+		// output a not-nil error
+		outErr := latErr
+		if outErr == nil {
+			outErr = lngErr
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(common.OutError("Invalid request (lng or lat)", outErr))
+		return
+	}
 
 	// execute query
 	// TODO: "External" Limit?
