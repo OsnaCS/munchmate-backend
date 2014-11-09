@@ -12,10 +12,10 @@ type Response struct {
 }
 
 type ResponseError struct {
-	Msg       string `json:"message"`
-	Err       error  `json:"error"`
-	Timestamp int64  `json:"timestamp"`
-	Querytime int32  `json:"queryduration"`
+	Msg       string      `json:"message"`
+	Err       interface{} `json:"error"`
+	Timestamp int64       `json:"timestamp"`
+	Querytime int32       `json:"queryduration"`
 }
 
 func NewResponse(data interface{}) Response {
@@ -31,7 +31,7 @@ func OutResponse(data interface{}) []byte {
 	return out
 }
 
-func NewError(msg string, err error) ResponseError {
+func NewError(msg string, err interface{}) ResponseError {
 	return ResponseError{
 		msg,
 		err,
@@ -40,7 +40,7 @@ func NewError(msg string, err error) ResponseError {
 	}
 }
 
-func OutError(msg string, err error) []byte {
+func OutError(msg string, err interface{}) []byte {
 	out, _ := json.Marshal(NewError(msg, err))
 	return out
 }

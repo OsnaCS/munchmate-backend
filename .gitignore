@@ -4,3 +4,6 @@
 # binary
 munchmate-backend
 gin-bin
+
+# sensitive data
+setEnv.sh
