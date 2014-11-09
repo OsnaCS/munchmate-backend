@@ -40,7 +40,7 @@ type cloudinaryUploadAnswer struct {
 
 func GetUserByID(w http.ResponseWriter, r *http.Request, par httprouter.Params) {
 	// try to parse id given by URL
-	id, convErr := strconv.ParseInt(par.ByName("id"), 10, 32)
+	id, convErr := strconv.ParseInt(par.ByName("id"), 10, 64)
 	if convErr != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(common.OutError("Invalid request (id)", convErr))
@@ -83,6 +83,14 @@ func GetUserByID(w http.ResponseWriter, r *http.Request, par httprouter.Params) 
 
 func UpdateUserAvatar(w http.ResponseWriter, r *http.Request, par httprouter.Params) {
 	// --- Check Request ------------------------------------------------------
+	// check user id
+	id, convErr := strconv.ParseInt(par.ByName("id"), 10, 64)
+	if convErr != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(common.OutError("Invalid request (id)", convErr))
+		return
+	}
+
 	// read data of request and try to verify it
 	inBuf := new(bytes.Buffer)
 	inBuf.ReadFrom(r.Body)
@@ -120,8 +128,20 @@ func UpdateUserAvatar(w http.ResponseWriter, r *http.Request, par httprouter.Par
 		return
 	}
 
+	// --- Save URL and thumbnial in database ---------------------------------
+	res, dbErr := common.DB().Exec(
+		`UPDATE users
+   		 SET avatar_url=$1, last_action=now(), avatar_thumbnail=$2
+ 		 WHERE id=$3;`, upRespond.SecureUrl, thumbnail, id)
+	affected, affErr := res.RowsAffected()
+	if dbErr != nil || (affected != 1 && affErr == nil) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write(common.OutError("Failed save image to DB!", dbErr))
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
-	w.Write(common.OutResponse(thumbnail))
+	w.Write(common.OutResponse("Success"))
 }
 
 func uploadImage(img []byte) (*cloudinaryUploadAnswer, error) {
@@ -172,7 +192,7 @@ func uploadImage(img []byte) (*cloudinaryUploadAnswer, error) {
 	return &out, nil
 }
 
-func getSmallBase64(info cloudinaryUploadAnswer) (string, error) {
+func getSmallBase64(info cloudinaryUploadAnswer) ([]byte, error) {
 	// build url of small image
 	trans := "c_fill" +
 		",w_" + strconv.Itoa(IMAGE_DIMENSION_SMALL) +
@@ -185,15 +205,15 @@ func getSmallBase64(info cloudinaryUploadAnswer) (string, error) {
 	resp, getErr := http.Get(url)
 
 	if getErr != nil {
-		return "", getErr
+		return nil, getErr
 	}
 	if resp.StatusCode != 200 {
-		return "", errors.New("Downloading thumbnail failed (Code: " +
+		return nil, errors.New("Downloading thumbnail failed (Code: " +
 			strconv.Itoa(resp.StatusCode) + ")")
 	}
 
 	inBuf := new(bytes.Buffer)
 	inBuf.ReadFrom(resp.Body)
 	img := inBuf.Bytes()
-	return base64.StdEncoding.EncodeToString(img), nil
+	return img, nil
 }
