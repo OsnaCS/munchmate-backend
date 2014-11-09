@@ -105,14 +105,34 @@ func UpdateUserAvatar(w http.ResponseWriter, r *http.Request, par httprouter.Par
 	}
 
 	// --- Upload image to cloudinary -----------------------------------------
+	upRespond, upErr := uploadImage(img)
+	if upErr != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write(common.OutError("Failed to upload the image!", upErr))
+		return
+	}
+
+	// --- Download small image and save it into database ---------------------
+	thumbnail, thumbErr := getSmallBase64(*upRespond)
+	if thumbErr != nil {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write(common.OutError("Failed to download thumbnail!", thumbErr))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(common.OutResponse(thumbnail))
+}
+
+func uploadImage(img []byte) (*cloudinaryUploadAnswer, error) {
 	// prepare cloudinary request
-	transBig := "c_fill" +
+	trans := "c_fill" +
 		",w_" + strconv.Itoa(IMAGE_DIMENSION_BIG) +
 		",q_" + strconv.Itoa(IMAGE_QUALITY_BIG)
 	params := url.Values{
 		"timestamp":      {strconv.FormatInt(time.Now().Unix(), 10)},
 		"format":         {"jpg"},
-		"transformation": {transBig},
+		"transformation": {trans},
 	}
 
 	// calculate signature
@@ -131,40 +151,25 @@ func UpdateUserAvatar(w http.ResponseWriter, r *http.Request, par httprouter.Par
 		"http://api.cloudinary.com/v1_1/munchmate/image/upload", params)
 
 	// check if any error occured while sending post request
-	if resp.StatusCode != 200 || postErr != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		if postErr == nil {
-			w.Write(common.OutError("Storing image failed!", resp.StatusCode))
-		} else {
-			w.Write(common.OutError("Storing image failed", postErr))
-		}
-		return
+	if postErr != nil {
+		return nil, postErr
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New("Uploading image failed (Code: " +
+			strconv.Itoa(resp.StatusCode) + ")")
 	}
 
 	// read answer of post request and unmarshal into struct
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
-	var clResp cloudinaryUploadAnswer
-	json.Unmarshal(buf.Bytes(), &clResp)
+	var out cloudinaryUploadAnswer
+	json.Unmarshal(buf.Bytes(), &out)
 
-	if clResp.SecureUrl == "" {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(common.OutError(
-			"Unexpected answer from cloudinary server",
-			[]interface{}{clResp, string(buf.Bytes())}))
-		return
+	if out.SecureUrl == "" {
+		return nil, errors.New("Unexpected answer from cloudinary server! (" +
+			string(buf.Bytes()) + ")")
 	}
-
-	// --- Download small image and save it into database ---------------------
-	thumbnail, thumbErr := getSmallBase64(clResp)
-	if thumbErr != nil {
-		w.WriteHeader(http.StatusServiceUnavailable)
-		w.Write(common.OutError("Failed to download thumbnail!", thumbErr))
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(common.OutResponse(smallUrl))
+	return &out, nil
 }
 
 func getSmallBase64(info cloudinaryUploadAnswer) (string, error) {
@@ -173,22 +178,22 @@ func getSmallBase64(info cloudinaryUploadAnswer) (string, error) {
 		",w_" + strconv.Itoa(IMAGE_DIMENSION_SMALL) +
 		",q_" + strconv.Itoa(IMAGE_QUALITY_SMALL)
 	url := "https://res.cloudinary.com/munchmate/image/upload/" +
-		transSmall + "/v" + strconv.FormatInt(info.Version, 10) +
+		trans + "/v" + strconv.FormatInt(info.Version, 10) +
 		"/" + info.PublicID + ".jpg"
 
 	// download image
 	resp, getErr := http.Get(url)
 
 	if getErr != nil {
-		return getErr
+		return "", getErr
 	}
 	if resp.StatusCode != 200 {
-		return errors.New("Downloading thumbnail failed (Code: " +
-			strconv.Itoa(resp.StatusCode))
+		return "", errors.New("Downloading thumbnail failed (Code: " +
+			strconv.Itoa(resp.StatusCode) + ")")
 	}
 
 	inBuf := new(bytes.Buffer)
-	inBuf.ReadFrom(r.Body)
+	inBuf.ReadFrom(resp.Body)
 	img := inBuf.Bytes()
 	return base64.StdEncoding.EncodeToString(img), nil
 }
