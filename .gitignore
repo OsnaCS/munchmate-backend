@@ -1,9 +1,9 @@
-# sublime workspace
+# sublime
 *.sublime-workspace
+*.sublime-project
 
 # binary
 munchmate-backend
-gin-bin
 
 # sensitive data
-setEnv.sh
+set_env.sh
