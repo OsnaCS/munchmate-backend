@@ -12,4 +12,7 @@ func PrepareRoutes(r *httprouter.Router) {
 	// routes for /user
 	r.GET("/v1/user/:id", GetUserByID)
 	r.PUT("/v1/user/:id/avatar", UpdateUserAvatar)
+
+	// routes for /munch
+	r.GET("/v1/munch/upcoming", GetUpcomingMunches)
 }

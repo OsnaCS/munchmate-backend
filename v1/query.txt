@@ -1,0 +1,12 @@
+SELECT munches.id, MAX(munches.date), MAX(canteens.id), MAX(canteens.city_id), 
+			    MAX(canteens.name), MAX(cities.name), AVG(canteens.location),
+			    array_agg(users.username)
+		 FROM munches
+		 INNER JOIN canteens ON canteens.id=munches.canteen
+		 INNER JOIN cities ON cities.id=canteens.city_id
+		 INNER JOIN u_joins_m ON u_joins_m.munch_id=munches.id
+		 INNER JOIN users ON u_joins_m.user_id=users.id
+		 GROUP BY munches.id
+		 HAVING date > now()
+		 ORDER BY date ASC
+		 LIMIT 5
