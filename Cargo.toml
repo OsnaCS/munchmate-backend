@@ -1,0 +1,5 @@
+[package]
+
+name = "munchmate-backend"
+version = "0.0.1"
+authors = ["Lukas Kalbertodt <lukas.kalbertodt@gmail.com>"]
