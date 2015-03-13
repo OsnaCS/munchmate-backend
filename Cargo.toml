@@ -9,6 +9,8 @@ hyper = "*"
 iron = "*"
 rustc-serialize = "*"
 valico = "*"
+postgres = "*"
+openssl = "*"
 
 [dependencies.rustless]
 git = "https://github.com/rustless/rustless"
