@@ -3,3 +3,12 @@
 name = "munchmate-backend"
 version = "0.0.1"
 authors = ["Lukas Kalbertodt <lukas.kalbertodt@gmail.com>"]
+
+[dependencies]
+hyper = "*"
+iron = "*"
+rustc-serialize = "*"
+valico = "*"
+
+[dependencies.rustless]
+git = "https://github.com/rustless/rustless"

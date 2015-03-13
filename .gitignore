@@ -4,6 +4,10 @@
 
 # binary
 munchmate-backend
+target
 
 # sensitive data
 set_env.sh
+
+# cargo
+Cargo.lock
