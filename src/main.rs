@@ -1,6 +1,7 @@
 #![feature(plugin)]
 #![feature(core)]
 
+extern crate hyper;
 extern crate iron;
 extern crate openssl;
 extern crate postgres;

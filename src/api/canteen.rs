@@ -1,7 +1,6 @@
 use db::DatabaseExt;
 use rustless::{Nesting, Namespace};
 use std;
-// use util::{SmartEndpoint};
 use super::util::handle;
 
 #[derive(RustcDecodable, RustcEncodable)]
