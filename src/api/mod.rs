@@ -2,6 +2,7 @@ use db::DatabaseExt;
 use rustc_serialize::json;
 use rustless;
 use rustless::{Api, Nesting, Versioning};
+use iron::mime;
 use std;
 use std::str::FromStr;
 
@@ -26,7 +27,7 @@ pub fn root() -> rustless::Api {
         // api.prefix("api");
 
         api.get("info/:id", |endpoint| {
-            endpoint.handle(|client, params| {
+            endpoint.handle(|mut client: _, params| {
                 let db = client.app.db();
 
                 let stmt = db.prepare(
@@ -49,9 +50,12 @@ pub fn root() -> rustless::Api {
                     };
                     vec.push(canteen);
                 }
+                client.set_content_type(mime::Mime(
+                    mime::TopLevel::Application, 
+                    mime::SubLevel::Json, 
+                    vec![(mime::Attr::Charset, mime::Value::Utf8)]
+                ));
                 client.text(json::encode(&vec).unwrap())
-                // client.text(params.find("id")
-                //     .unwrap().as_string().unwrap().to_string())
             })
         });
        
