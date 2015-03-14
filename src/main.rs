@@ -1,4 +1,5 @@
 #![feature(plugin)]
+#![feature(core)]
 
 extern crate iron;
 extern crate openssl;
