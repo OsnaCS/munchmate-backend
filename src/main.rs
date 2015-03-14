@@ -15,6 +15,7 @@ use std::borrow::Borrow;
 
 mod db;
 mod api;
+mod util;
 
 
 // If the Option obtained by $x is None, it will return, otherwise return Some
