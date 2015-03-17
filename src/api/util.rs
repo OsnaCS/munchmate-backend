@@ -1,5 +1,4 @@
 use hyper::status::StatusCode;
-use iron::mime;
 use rustc_serialize::Encodable;
 use rustc_serialize::json::{self, Json};
 use rustless::errors::ErrorResponse;
@@ -53,17 +52,10 @@ pub fn handle<F: 'static, R: Encodable>(ep: &mut Endpoint, handler: F)
         where F: for<'a> Fn(& Client<'a>, LazyParam) -> 
             Result<R, ApiError> + Sync + Send {
     // Call handle of the endpoint with wrapper closure
-    ep.handle(move |mut client, params| {
+    ep.handle(move |client, params| {
         // Create LazyParam pack and call the handler closure with it
         let sp = LazyParam{ param: params };
         let res = handler(&client, sp);
-
-        // Set content type to Json with charset utf8
-        client.set_content_type(mime::Mime(
-            mime::TopLevel::Application, 
-            mime::SubLevel::Json, 
-            vec![(mime::Attr::Charset, mime::Value::Utf8)]
-        ));
 
         // Handle errors in handler: If everything was ok, the returned 
         // Encodable will be encoded as json and returned as Response. If an

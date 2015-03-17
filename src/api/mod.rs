@@ -3,6 +3,7 @@ use hyper::status::StatusCode;
 use rustc_serialize::{Encodable, Encoder};
 use std::borrow::Borrow;
 use std;
+use iron::mime;
 use std::num::ToPrimitive;
 
 mod util;
@@ -11,7 +12,19 @@ mod v1;
 
 pub fn root() -> Api {
     Api::build(|api| {
-        api.mount(v1::root())
+        // After the reponse was build, we want to set the content type
+        // to JSON with the field charset=utf8
+        api.after(|client, _| {
+            client.set_content_type(mime::Mime(
+                mime::TopLevel::Application, 
+                mime::SubLevel::Json, 
+                vec![(mime::Attr::Charset, mime::Value::Utf8)]
+            ));
+            Ok(())
+        });
+
+        // Mount different versions
+        api.mount(v1::root());
     })
 }
 
