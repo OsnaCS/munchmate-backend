@@ -1,7 +1,7 @@
 use db::DatabaseExt;
 use rustless::{Nesting, Namespace};
 use std;
-use super::util::handle;
+use super::super::util::handle;
 
 #[derive(RustcDecodable, RustcEncodable)]
 struct Canteen {

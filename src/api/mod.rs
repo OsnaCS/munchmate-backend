@@ -1,21 +1,17 @@
-use rustless::{self, Api, Nesting, Versioning};
+use rustless::{Api, Nesting};
 use hyper::status::StatusCode;
 use rustc_serialize::{Encodable, Encoder};
 use std::borrow::Borrow;
 use std;
 use std::num::ToPrimitive;
 
-mod canteen;
 mod util;
+mod v1;
 
 
-pub fn root() -> rustless::Api {
+pub fn root() -> Api {
     Api::build(|api| {
-        // Specify API version
-        api.version("v1", Versioning::Path);
-        // api.prefix("api");
-
-        api.resource("canteen", canteen::route);       
+        api.mount(v1::root())
     })
 }
 
