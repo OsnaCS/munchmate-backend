@@ -6,7 +6,7 @@ use r2d2_postgres::PostgresConnectionManager;
 
 // Some type aliases for nicer names
 pub type PooledDB = r2d2::Pool<PostgresConnectionManager>;
-pub type PooledDBConn<'a> = 
+pub type PooledDBConn<'a> =
     r2d2::PooledConnection<'a, PostgresConnectionManager>;
 
 

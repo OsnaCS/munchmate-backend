@@ -8,7 +8,6 @@ pub fn root() -> Api {
     Api::build(|api| {
         api.version("v1", Versioning::Path);
 
-        api.resource("canteen", canteen::route);       
+        api.resource("canteen", canteen::route);
     })
 }
-

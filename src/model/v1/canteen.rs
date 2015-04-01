@@ -16,7 +16,7 @@ pub struct Canteen {
 impl Canteen {
     pub fn get_by_id(db: PooledDBConn, id: i32) -> Result<Canteen, ApiError> {
         let stmt = db.prepare(
-            r#"SELECT canteens.id, canteens.name, city_id, cities.name, 
+            r#"SELECT canteens.id, canteens.name, city_id, cities.name,
             CAST(-1 AS float8) AS "distance"
             FROM canteens
             INNER JOIN cities ON cities.id=city_id
@@ -24,7 +24,7 @@ impl Canteen {
 
         let rows = match stmt.query(&[&id]) {
             Err(e) => return Err(ApiError::detailed(
-                StatusCode::InternalServerError, 
+                StatusCode::InternalServerError,
                 "Query failed!".to_string(),
                 e.description().to_string())),
             Ok(rows) => rows

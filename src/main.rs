@@ -35,7 +35,7 @@ macro_rules! try_or_return {
 fn main() {
     // Try to get all needed env-vars
     let (port, db_url) = try_or_return!(fetch_env());
-    
+
     // Try to create database pool and connect to database
     let db_pool = try_or_return!(db::setup(db_url.borrow(), 1));
 

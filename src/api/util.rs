@@ -9,7 +9,7 @@ use std;
 use super::ApiError;
 
 
-// Wrapper around &Json, which is used as parameter type by rustless. Getting 
+// Wrapper around &Json, which is used as parameter type by rustless. Getting
 // values in the correct type out of &Json is verbose... this wrapper makes it
 // a lot less typing (and it will do error checking).
 struct LazyParam<'a> {
@@ -24,7 +24,7 @@ impl<'a> LazyParam<'a> {
         let strpar = match self.param.find(key) {
             Some(val) => val.as_string().unwrap(),
             None => {
-                return Err(ApiError::new(StatusCode::BadRequest, 
+                return Err(ApiError::new(StatusCode::BadRequest,
                     format!("Missing Parameter '{}'", key)))
             },
         };
@@ -34,7 +34,7 @@ impl<'a> LazyParam<'a> {
             Ok(val) => Ok(val),
             Err(_) => {
                 let tydesc = unsafe { *std::intrinsics::get_tydesc::<T>() };
-                let desc = format!("Parameter '{}' cannot be parsed as '{}'", 
+                let desc = format!("Parameter '{}' cannot be parsed as '{}'",
                     key, tydesc.name);
                 Err(ApiError::detailed(StatusCode::BadRequest, desc,
                     format!("value: '{}'", strpar)))
@@ -47,9 +47,9 @@ impl<'a> LazyParam<'a> {
 // Helper function to reduce redundant code: It wraps Endpoint::handle,
 // replaces the Json params with LazyParams and replaces the closure return
 // type with a more convinient return type
-pub fn handle<F: 'static, R: Encodable>(ep: &mut Endpoint, handler: F) 
-        -> EndpointHandlerPresent 
-        where F: for<'a> Fn(& Client<'a>, LazyParam) -> 
+pub fn handle<F: 'static, R: Encodable>(ep: &mut Endpoint, handler: F)
+        -> EndpointHandlerPresent
+        where F: for<'a> Fn(& Client<'a>, LazyParam) ->
             Result<R, ApiError> + Sync + Send {
     // Call handle of the endpoint with wrapper closure
     ep.handle(move |client, params| {
@@ -57,14 +57,14 @@ pub fn handle<F: 'static, R: Encodable>(ep: &mut Endpoint, handler: F)
         let sp = LazyParam{ param: params };
         let res = handler(&client, sp);
 
-        // Handle errors in handler: If everything was ok, the returned 
+        // Handle errors in handler: If everything was ok, the returned
         // Encodable will be encoded as json and returned as Response. If an
         // error occured, the json representation of the error will be returned
         match res {
             Ok(val) => client.text(json::encode(&val).unwrap()),
             Err(e) => {
                 let resp = Response::from_string(
-                    StatusCode::NotFound, 
+                    StatusCode::NotFound,
                     json::encode(&e).unwrap());
                 Err(ErrorResponse { error: Box::new(e), response: Some(resp) })
             }

@@ -16,8 +16,8 @@ pub fn root() -> Api {
         // to JSON with the field charset=utf8
         api.after(|client, _| {
             client.set_content_type(mime::Mime(
-                mime::TopLevel::Application, 
-                mime::SubLevel::Json, 
+                mime::TopLevel::Application,
+                mime::SubLevel::Json,
                 vec![(mime::Attr::Charset, mime::Value::Utf8)]
             ));
             Ok(())
@@ -55,14 +55,14 @@ impl std::error::Error for ApiError {
 
 impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "#{}: {} ({})", self.code.to_u16().unwrap(), 
+        write!(f, "#{}: {} ({})", self.code.to_u16().unwrap(),
             self.desc, self.detail)
     }
 }
 
 impl Encodable for ApiError {
     fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
-      
+
         encoder.emit_struct("ApiError", 1, |encoder| {
             try!(encoder.emit_struct_field("status_code", 0, |encoder| {
                 format!("{} {}",
