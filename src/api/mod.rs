@@ -31,7 +31,7 @@ pub fn root() -> Api {
 
 
 #[derive(Debug)]
-struct ApiError {
+pub struct ApiError {
     desc: String,
     code: StatusCode,
     detail: String,

@@ -10,6 +10,7 @@ extern crate r2d2_postgres;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate rustless;
 extern crate typemap;
+extern crate valico;
 
 use iron::Iron;
 use rustless::Application;
@@ -18,6 +19,7 @@ use std::borrow::Borrow;
 mod db;
 mod api;
 mod util;
+mod model;
 
 
 // If the Option obtained by $x is None, it will return, otherwise return Some
