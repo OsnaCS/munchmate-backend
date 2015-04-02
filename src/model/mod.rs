@@ -7,8 +7,8 @@ pub mod v1;
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Location {
-    lat: f64,
-    lng: f64,
+    pub lat: f64,
+    pub lng: f64,
 }
 
 impl FromSql for Location {

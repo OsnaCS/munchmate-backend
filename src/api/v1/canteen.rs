@@ -1,4 +1,5 @@
 use db::DatabaseExt;
+use ::model::Location;
 use model::v1 as model;
 use rustless::{Nesting, Namespace};
 use super::super::util::handle;
@@ -14,6 +15,20 @@ pub fn route(ns: &mut Namespace) {
 
             // Execute query to fetch canteen.
             model::canteen::Canteen::get_by_id(db, id)
+        })
+    });
+
+    ns.get("nearest", |endpoint| {
+        handle(endpoint, |client, params| {
+            // Obtain database handle and get parameter.
+            let db = client.app.db();
+            let pos = Location {
+                lat: try!(params.get("lat")),
+                lng: try!(params.get("lng")),
+            };
+
+            // Execute query to fetch canteens.
+            model::canteen::Canteen::get_nearest(db, pos)
         })
     });
 }
