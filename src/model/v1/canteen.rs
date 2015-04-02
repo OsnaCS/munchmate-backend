@@ -2,6 +2,7 @@ use api::ApiError;
 use db::PooledDBConn;
 use hyper::status::StatusCode;
 use std::error::Error;
+use model::Location;
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Canteen {
@@ -9,15 +10,14 @@ pub struct Canteen {
     name: String,
     city_id: i32,
     city_name: String,
-    // GeoLocation common.Location
-    distance: f64,
+    location: Location,
 }
 
 impl Canteen {
     pub fn get_by_id(db: PooledDBConn, id: i32) -> Result<Canteen, ApiError> {
         let stmt = db.prepare(
             r#"SELECT canteens.id, canteens.name, city_id, cities.name,
-            CAST(-1 AS float8) AS "distance"
+            canteens.location
             FROM canteens
             INNER JOIN cities ON cities.id=city_id
             WHERE canteens.id=$1"#).unwrap();
@@ -36,9 +36,9 @@ impl Canteen {
                             name: row.get(1),
                             city_id: row.get(2),
                             city_name: row.get(3),
-                            distance: row.get(4),
+                            location: row.get(4),
                         }),
-            None => Err(ApiError::new(StatusCode::BadRequest,
+            None => Err(ApiError::new(StatusCode::NotFound,
                 format!("No canteen found with id '{}'", id)))
         }
     }
