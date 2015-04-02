@@ -11,6 +11,7 @@ pub struct Canteen {
     city_id: i32,
     city_name: String,
     location: Location,
+    distance: Option<f64>,
 }
 
 impl Canteen {
@@ -38,6 +39,7 @@ impl Canteen {
                             city_id: row.get(2),
                             city_name: row.get(3),
                             location: row.get(4),
+                            distance: None,
                         }),
             None => Err(ApiError::new(StatusCode::NotFound,
                 format!("No canteen found with id '{}'", id)))
@@ -74,6 +76,7 @@ impl Canteen {
                 city_id: row.get(2),
                 city_name: row.get(3),
                 location: row.get(4),
+                distance: row.get(5),
             });
         }
 
