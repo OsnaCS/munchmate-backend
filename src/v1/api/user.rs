@@ -12,8 +12,19 @@ pub fn route(ns: &mut Namespace) {
             let db = client.app.db();
             let id : i64 = try!(params.get("id"));
 
-            // Execute query to fetch canteen.
+            // Execute query to fetch user.
             model::User::get_by_id(db, id)
+        })
+    });
+
+    ns.get("contacts", |endpoint| {
+        handle(endpoint, |client, params| {
+            // Obtain database handle and get parameter.
+            let db = client.app.db();
+            let myid : i64 = try!(params.get("myid"));
+
+            // Execute query to fetch contacts.
+            model::User::contacts(db, myid)
         })
     });
 }

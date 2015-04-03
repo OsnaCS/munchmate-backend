@@ -17,6 +17,7 @@ pub fn route(ns: &mut Namespace) {
         })
     });
 
+
     ns.get("nearest", |endpoint| {
         handle(endpoint, |client, params| {
             // Obtain database handle and get parameter.
