@@ -6,7 +6,7 @@ use rustless::framework::endpoint::EndpointHandlerPresent;
 use rustless::{Endpoint, Client, Response};
 use std::str::FromStr;
 use std;
-use super::ApiError;
+use super::super::ApiError;
 
 
 // Wrapper around &Json, which is used as parameter type by rustless. Getting

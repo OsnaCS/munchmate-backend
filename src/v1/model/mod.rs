@@ -2,7 +2,7 @@ use postgres::{Type, FromSql, Result, Error};
 use std::io::Read;
 
 
-pub mod v1;
+pub mod canteen;
 
 
 #[derive(RustcDecodable, RustcEncodable)]

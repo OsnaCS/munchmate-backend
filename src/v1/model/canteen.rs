@@ -1,8 +1,8 @@
-use api::ApiError;
-use db::PooledDBConn;
+use v1::ApiError;
+use v1::db::PooledDBConn;
 use hyper::status::StatusCode;
 use std::error::Error;
-use model::Location;
+use v1::model::Location;
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct Canteen {

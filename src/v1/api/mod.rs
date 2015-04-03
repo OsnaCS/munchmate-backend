@@ -1,7 +1,6 @@
-
 use rustless::{Api, Nesting, Versioning};
 
-
+mod util;
 mod canteen;
 
 pub fn root() -> Api {

@@ -13,13 +13,12 @@ extern crate typemap;
 extern crate valico;
 
 use iron::Iron;
-use rustless::Application;
+use rustless::{Application, Api, Nesting};
 use std::borrow::Borrow;
+use iron::mime;
 
-mod db;
-mod api;
-mod util;
-mod model;
+
+mod v1;
 
 
 // If the Option obtained by $x is None, it will return, otherwise return Some
@@ -37,20 +36,38 @@ fn main() {
     let (port, db_url) = try_or_return!(fetch_env());
 
     // Try to create database pool and connect to database
-    let db_pool = try_or_return!(db::setup(db_url.borrow(), 1));
+    let db_pool = try_or_return!(v1::db::setup(db_url.borrow(), 1));
 
     // Create rustless application with root api from module api
-    let mut app = Application::new(api::root());
+    let mut app = Application::new(root());
 
     // Insert the database pool into the typemap to make it available for the
     // api endpoints
-    app.ext.insert::<db::AppDB>(db_pool);
+    app.ext.insert::<v1::db::AppDB>(db_pool);
 
     // Start HTTP server on the given port
     println!("Listening on port {}", port);
     Iron::new(app).http(("localhost", port)).unwrap();
 }
 
+
+pub fn root() -> Api {
+    Api::build(|api| {
+        // After the reponse was build, we want to set the content type
+        // to JSON with the field charset=utf8
+        api.after(|client, _| {
+            client.set_content_type(mime::Mime(
+                mime::TopLevel::Application,
+                mime::SubLevel::Json,
+                vec![(mime::Attr::Charset, mime::Value::Utf8)]
+            ));
+            Ok(())
+        });
+
+        // Mount different versions
+        api.mount(v1::api::root());
+    })
+}
 
 // Fetches all needed environment variables
 fn fetch_env() -> Option<(u16, String)> {
