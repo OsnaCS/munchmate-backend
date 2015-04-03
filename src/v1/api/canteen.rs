@@ -1,8 +1,7 @@
 use rustless::{Nesting, Namespace};
 use super::util::handle;
 use v1::db::DatabaseExt;
-use v1::model::canteen::Canteen;
-use v1::model::Location;
+use v1::model::{self, Location};
 
 pub fn route(ns: &mut Namespace) {
 
@@ -14,7 +13,7 @@ pub fn route(ns: &mut Namespace) {
             let id : i32 = try!(params.get("id"));
 
             // Execute query to fetch canteen.
-            Canteen::get_by_id(db, id)
+            model::Canteen::get_by_id(db, id)
         })
     });
 
@@ -28,7 +27,7 @@ pub fn route(ns: &mut Namespace) {
             };
 
             // Execute query to fetch canteens.
-            Canteen::get_nearest(db, pos)
+            model::Canteen::get_nearest(db, pos)
         })
     });
 }

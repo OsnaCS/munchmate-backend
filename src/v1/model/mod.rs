@@ -1,8 +1,12 @@
 use postgres::{Type, FromSql, Result, Error};
 use std::io::Read;
+pub use self::canteen::Canteen;
+pub use self::user::User;
 
 
 pub mod canteen;
+pub mod user;
+
 
 
 #[derive(RustcDecodable, RustcEncodable)]
