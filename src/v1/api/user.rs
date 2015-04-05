@@ -27,4 +27,14 @@ pub fn route(ns: &mut Namespace) {
             model::User::contacts(db, myid)
         })
     });
+
+    ns.get("login", |endpoint| {
+        handle(endpoint, |client, params| {
+            let db = client.app.db();
+            let username : String = try!(params.get("username"));
+            let auth_key : String = try!(params.get("auth_key"));
+
+            model::User::login(db, username, auth_key)
+        })
+    });
 }
