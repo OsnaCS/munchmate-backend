@@ -33,9 +33,9 @@ impl<'a> LazyParam<'a> {
         match strpar.parse() {
             Ok(val) => Ok(val),
             Err(_) => {
-                let tydesc = unsafe { *std::intrinsics::get_tydesc::<T>() };
+                let tyname = unsafe { std::intrinsics::type_name::<T>() };
                 let desc = format!("Parameter '{}' cannot be parsed as '{}'",
-                    key, tydesc.name);
+                    key, tyname);
                 Err(ApiError::detailed(StatusCode::BadRequest, desc,
                     format!("value: '{}'", strpar)))
             },

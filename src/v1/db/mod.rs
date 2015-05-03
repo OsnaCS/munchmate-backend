@@ -23,7 +23,14 @@ pub fn setup(url: &str, pool_size: u32) -> Option<PooledDB> {
     };
 
     // Create manager
-    let manager = PostgresConnectionManager::new(url, ssl_mode);
+    let manager = match PostgresConnectionManager::new(url, ssl_mode) {
+        Ok(m) => m,
+        Err(e) => {
+            println!("ERROR: Failed to initialize connection manager!");
+            println!("    => {}", e);
+            return None;
+        }
+    };
 
     // Configure, create and return pool
     let config = r2d2::Config::builder().pool_size(pool_size).build();

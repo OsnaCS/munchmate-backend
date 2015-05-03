@@ -1,7 +1,7 @@
 use hyper::status::StatusCode;
 use std;
 use rustc_serialize::{Encodable, Encoder};
-use std::num::ToPrimitive;
+use num::ToPrimitive;
 
 
 
@@ -36,7 +36,7 @@ impl std::error::Error for ApiError {
 
 impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "#{}: {} ({})", self.code.to_u16().unwrap(),
+        write!(f, "#{}: {} ({})", self.code.to_u16(),
             self.desc, self.detail)
     }
 }
@@ -47,7 +47,7 @@ impl Encodable for ApiError {
         encoder.emit_struct("ApiError", 1, |encoder| {
             try!(encoder.emit_struct_field("status_code", 0, |encoder| {
                 format!("{} {}",
-                    self.code.to_u16().unwrap(),
+                    self.code.to_u16(),
                     self.code.canonical_reason().unwrap()
                 ).encode(encoder)
             }));

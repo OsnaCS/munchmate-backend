@@ -7,14 +7,14 @@ authors = ["Lukas Kalbertodt <lukas.kalbertodt@gmail.com>"]
 [dependencies]
 hyper = "*"
 iron = "*"
+lazy_static = "*"
+num = "*"
 openssl = "*"
 postgres = "*"
 r2d2 = "*"
 r2d2_postgres = "*"
 rustc-serialize = "*"
+rustless = "*"
 time = "*"
 typemap = "*"
 valico = "*"
-
-[dependencies.rustless]
-git = "https://github.com/rustless/rustless"

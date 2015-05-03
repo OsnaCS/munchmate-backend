@@ -3,10 +3,12 @@ use v1::db::PooledDBConn;
 use hyper::status::StatusCode;
 use std::io::Read;
 use std::error::Error;
-use postgres::{self, Type, FromSql};
-use std::time::{self, Duration};
+use postgres::{self, Type, FromSql, ToSql};
+use time::{self, Duration};
 
-static AUTH_TOKEN_TTL : Duration = Duration::seconds(10);
+lazy_static! {
+    static ref AUTH_TOKEN_TTL : Duration = Duration::seconds(10);
+}
 
 #[derive(RustcDecodable, RustcEncodable)]
 pub struct User {
@@ -126,25 +128,25 @@ impl User {
             // Create auth token and insert it into database.
 
             let now = time::now();
-            let valid_until = (now + AUTH_TOKEN_TTL).to_timespec();
+            let valid_until = (now + *AUTH_TOKEN_TTL).to_timespec();
             let token = "Cake".to_string();
 
-            let sql = r#"
-                INSERT INTO auth_tokens(user_id, token, valid_until, created)
-                VALUES ($1, $2, $3, $4);"#;
-            let args = &[&user.id, &token, &valid_until, &now];
-            match db.execute(sql, args) {
-                Err(e) => return Err(ApiError::detailed(
-                    StatusCode::InternalServerError,
-                    "Query failed!".to_string(),
-                    e.description().to_string())),
-                Ok(affected) if (affected != 1) => return Err(ApiError::new(
-                    StatusCode::InternalServerError, format!(
-                        "Query succeded, but affected {} (instead of 1) rows!",
-                        affected)
-                    )),
-                _ => {},
-            };
+            // let sql = r#"
+            //     INSERT INTO auth_tokens(user_id, token, valid_until, created)
+            //     VALUES ($1, $2, $3, $4);"#;
+            // let args : &[&ToSql] = &[&user.id, &token, &valid_until, &now];
+            // match db.execute(sql, args) {
+            //     Err(e) => return Err(ApiError::detailed(
+            //         StatusCode::InternalServerError,
+            //         "Query failed!".to_string(),
+            //         e.description().to_string())),
+            //     Ok(affected) if (affected != 1) => return Err(ApiError::new(
+            //         StatusCode::InternalServerError, format!(
+            //             "Query succeded, but affected {} (instead of 1) rows!",
+            //             affected)
+            //         )),
+            //     _ => {},
+            // };
 
             Ok(LoginResponse {
                 auth_token: token,
